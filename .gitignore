@@ -1,5 +1,6 @@
-# Ignore virtual environments
+# Ignore artifacts from poetry
 **/.venv/
+**/dist/
 
 # Ignore pycache
 **/__pycache__
