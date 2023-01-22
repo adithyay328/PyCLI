@@ -1,6 +1,7 @@
 # Declares our main CLI app class, which has functions
 # that can be used as decorators for custom client code.
 import sys
+import subprocess
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import (
@@ -22,6 +23,10 @@ class PyCLIApp:
         self.commands["help"] = (
             self.help,
             "List available commands and their help messages.",
+        )
+        self.commands["clear"] = (
+            self.clear,
+            "Clear the current command line.",
         )
 
         self.promptTitle = promptTitle
@@ -60,6 +65,10 @@ class PyCLIApp:
     def help(self, params):
         for command in self.commands:
             print(f"{command} : {self.commands[command][1]}")
+    
+    # A defult command to clear the current command line
+    def clear(self, params):
+        subprocess.run("clear", shell=True)
 
     def run(self):
         """
