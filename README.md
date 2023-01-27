@@ -2,11 +2,13 @@
 PyCLI is a really simple library for interactive python CLIs. I mostly built
 it for personal use on side projects, but feel free to use it.
 
+## Install Instructions
 To install:
 ```python
 pip install simplepycli
 ```
 
+## Basic API Example
 The API is really simple, so here is a comprehensive example of how it works. This is also available at example.py:
 
 ```python
