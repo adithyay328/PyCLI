@@ -1,6 +1,5 @@
 # Declares our main CLI app class, which has functions
 # that can be used as decorators for custom client code.
-import sys
 import subprocess
 
 from prompt_toolkit import PromptSession
@@ -16,6 +15,10 @@ class PyCLIApp:
         # This dict stores tuples of (commandFunction, helpText),
         # with the key being the command name.
         self.commands = {}
+
+        # The run flag of this CLI app; loop exits when this
+        # is False
+        self.runFlag = True
 
         # Manually register some commands
         self.commands["exit"] = (
@@ -59,9 +62,10 @@ class PyCLIApp:
 
         return firstInner
 
-    # A default command to exit from the CLI
+    # A default command to exit from the CLI without
+    # using sys.exit; allows for nested loops.
     def exit(self, params):
-        sys.exit(0)
+        self.runFlag = False
 
     # A default command to ask for command help
     def help(self, params):
@@ -118,7 +122,11 @@ class PyCLIApp:
             validator=commandValidator,
         )
 
-        while True:
+        # Set our run flag to true; this will be negated by the exit command
+        # to stop this run loop. Allows for really simple nested interfaces.
+        self.runFlag = True
+
+        while self.runFlag:
             # When we run our prompt, the first word is our command
             # name, and the rest are the params we are going to
             # give to the command function;
