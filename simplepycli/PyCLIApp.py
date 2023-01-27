@@ -8,6 +8,8 @@ from prompt_toolkit.completion import (
     FuzzyWordCompleter,
 )
 
+from .CommandValidator import CommandValidator
+
 
 class PyCLIApp:
     def __init__(self, promptTitle="> "):
@@ -39,7 +41,7 @@ class PyCLIApp:
 
         :return None
         """
-        # This is what command(...) evaluates to, and takes the
+        # This is what @command(...) evaluates to, and takes the
         # function we're wrapping around as a paramater.
         # This needs to return a function, which can then be
         # called by client code
@@ -65,10 +67,38 @@ class PyCLIApp:
     def help(self, params):
         for command in self.commands:
             print(f"{command} : {self.commands[command][1]}")
-    
+
     # A defult command to clear the current command line
     def clear(self, params):
         subprocess.run("clear", shell=True)
+
+    # An error message we will display if the user tries to
+    # run a command that doesn't exist
+    def __invalidCommandError(self, commandName):
+        return (
+            f"'{commandName}' is not a valid command.\n"
+            + "Please try agian, or type 'help' for assistance. "
+        )
+
+    # A helper function to split the user's input text into a command
+    # and params
+    def __inputToParmsAndText(self, txt):
+        """
+        Takes a string of text and splits it into a command name and
+        a string of parameters.
+
+        :param txt: The string of text to split.
+
+        :return (commandName, params): A tuple of the command name and
+        the parameters.
+        """
+        # If input is empty, return empty
+        if txt.strip() == "":
+            return ("", "")
+
+        commandName = txt.split()[0]
+        params = txt.replace(f"{commandName} ", "")
+        return (commandName, params)
 
     def run(self):
         """
@@ -78,34 +108,26 @@ class PyCLIApp:
         # Get a word completer for all supported commands
         commandWordCompleter = FuzzyWordCompleter(list(self.commands.keys()))
 
+        # Use the CommandValidator class to validate commands
+        commandValidator = CommandValidator(self.commands.keys())
+
         # Construct our prompt session
         cliPromptSession = PromptSession(
-            message=self.promptTitle, completer=commandWordCompleter
-        )
-
-        # Contructor for an error message we'll print if anything goes wrong
-        errorMsg = (
-            lambda cmdName: f"'{cmdName}' is not a valid command.\n"
-            + "Please try agian, or type 'help' for assistance. "
+            message=self.promptTitle,
+            completer=commandWordCompleter,
+            validator=commandValidator,
         )
 
         while True:
             # When we run our prompt, the first word is our command
             # name, and the rest are the params we are going to
-            # give to the command function
+            # give to the command function;
+            # this prompt goes through a command
+            # validator, so we don't need to double
+            # check for an invalid command name
             userInput = cliPromptSession.prompt()
 
-            # If input is empty, ignore
-            if userInput.strip() == "":
-                print(errorMsg(""))
-                continue
+            commandName, params = self.__inputToParmsAndText(userInput)
 
-            commandName = userInput.split()[0]
-            params = userInput.replace(f"{commandName} ", "")
-
-            # If that isn't a valid command name, print an error
-            # message and ask for a retry
-            if commandName not in self.commands:
-                print(errorMsg(commandName))
-            else:
-                self.commands[commandName][0](params)
+            # Run our command
+            self.commands[commandName][0](params)
